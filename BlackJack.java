@@ -1,17 +1,20 @@
-import java.util.Random;
-import java.util.Scanner;
 
 public class BlackJack {
     
     
-    public boolean isGameRunning = true;
+    
+    
 
-    dealerModel dealer = new dealerModel();
-    userModel user = new userModel();
-    public Random rand = new Random();
-    Scanner scanner = new Scanner(System.in);
-    cards cards = new cards();
+    private dealerModel dealer = new dealerModel();
+    private userModel user = new userModel();
+    private baseModel bm = new baseModel();
+    public  boolean isGameRunning = true;
+    
     boolean userContinue;
+    boolean keepHitting= true; 
+    boolean userContinueHitting = true;
+    boolean skipToNext;
+    boolean firstGame = true;
 
 
     public void runGame() {
@@ -20,101 +23,88 @@ public class BlackJack {
         }
     }
 
-    
     public void startGame() {
+        skipToNext = false;
+        userContinueHitting = true;
 
-        System.out.println("Starting BlackJack game...");
-
-        System.out.println();
-        
-        initailHnadS();
-        printScore();
-        sleep(5000);
-
-        
-
-        if(dealer.score == 21) {
-            System.out.println("Dealer has a Blackjack! Dealer wins!");
-            endGame();
-            return;
+        if (firstGame) {
+            System.out.println("Welcome to BlackJack!!!\n");
+            firstGame = false;
+        } else {
+            System.out.println("Starting a new game...\n");
         }
         
-        System.out.println("Hit? (yes/no)");
+        sleep(1000);
+        user.getBetAmount();
+        sleep(1000);
 
-        String UserContinue = scanner.nextLine();
 
+        bm.initailHands(user, dealer);//good
 
+        sleep(1000);
 
-        switch(UserContinue.toLowerCase()) {
-            case "yes" -> userHit();
-            case "no" -> {
-                System.out.println("User chose to stop hitting.");
-                dealerHit();
-            }
-            default -> {
-                System.out.println("Invalid input. Please type 'yes' or 'no'.");
-                break; // Exit the method if input is invalid
-            }
+        bm.printScore(user, dealer);//good
+
+        sleep(1000);//good
+
+        bm.CheckForBlackJack(user, dealer, this);//good
+
+        sleep(1000);
+        
+
+        user.checkUser_bust(this);
+        
+        while (userContinueHitting && !skipToNext) {
+            
+            user.reHitUser(this);
+            sleep(1000);
         }
-
-        
+        while(!skipToNext && dealer.score <17 && dealer.score < user.score && dealer.score < 21 ){
+            dealer.dealerHit();
+            sleep(1000);
     }
-       
 
+    if(!skipToNext){
+        bm.checkWinner(user, dealer, this);
+        sleep(1000);
+        System.out.println("User final balance: " + user.getUserBalance());
+        sleep(1000);
+        askEndgame(); 
         
-
-public void initailHnadS(){
+    }   
     
-    int randomInt = rand.nextInt(11);  
-    int randomInt1 = rand.nextInt(3); 
-    System.out.println("Dealer's hand: " + cards.values[randomInt]+" of " + cards.suits[randomInt1]);
-    int randomInt2 = rand.nextInt(11);  
-    int randomInt3 = rand.nextInt(3); 
-    
-    int randomInt4 = rand.nextInt(11);  
-    int randomInt5 = rand.nextInt(3); 
-    System.out.println("User's hand: " + cards.values[randomInt2]+ " of " + cards.suits[randomInt3] + " and " + cards.values[randomInt4]+ " of " + cards.suits[randomInt5]);
-    //user score
-    user.setUserScore(cards.values[randomInt2], cards.values[randomInt4]);
-    dealer.setDealerScore(cards.values[randomInt]);
+    }
 
-}
+    public void endGame() {
+        System.out.println("Game Over!");
 
-public void userHit() {
-    int randomInt = rand.nextInt(11);  
-    int randomInt1 = rand.nextInt(3); 
-    System.out.println("User hits: " + cards.values[randomInt] + " of " + cards.suits[randomInt1]);
-    user.addScore(cards.getCardValue(cards.values[randomInt]));
-    System.out.println("User's new score: " + user.score);
-}
+        isGameRunning = false; // End the game loop
+        skipToNext = true;
+    }
 
-public void dealerHit() {
-    int randomInt = rand.nextInt(11);  
-    int randomInt1 = rand.nextInt(3); 
-    System.out.println("Dealer hits: " + cards.values[randomInt] + " of " + cards.suits[randomInt1]);
-    dealer.addScore(cards.getCardValue(cards.values[randomInt]));
-    System.out.println("Dealer's new score: " + dealer.score);
-}
+    public void askEndgame() {
+    String userInput = bm.readYesNo("Do you wish to play again? (yes/no)");
+    sleep(1000);
 
-public void printScore() {
-    System.out.println("User Score: " + user.score);
-    System.out.println("Dealer Score: " + dealer.score);
-}
-
-public void endGame() {
-    System.out.println("Game Over!");
-    double userBalance = user.getUserBalance();
-    System.out.println("User's final balance: " + userBalance);
-    
-    isGameRunning = false;
-
-}
-@SuppressWarnings("CallToPrintStackTrace")
-public void sleep(int milliseconds) {
-    try {
-        Thread.sleep(milliseconds);
-    } catch (InterruptedException e) {
-        e.printStackTrace();
+    if (userInput.equals("yes")) {
+        user.resetScore(); // Reset user score for a new game
+        dealer.resetScore(); // Reset dealer score for a new game
+        user.setBalance(0); // Reset user balance for a new game
+        skipToNext = false; // Reset skipToNext for the new game
+    } else { // userInput is "no"
+        endGame();
     }
 }
+
+    public void sleep(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
+
+
+
